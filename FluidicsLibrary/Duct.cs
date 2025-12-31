@@ -1,0 +1,32 @@
+﻿#nullable enable
+
+using System;
+using SE_Library;
+using CAD;
+using Mathematics;
+
+namespace Fluidics;
+
+public class Duct
+{
+    public enum CrossSectionTypeEnum
+    {
+        Square = 0,
+        Rectangular,
+        Circular,
+        Oval,
+        Other
+    }
+
+    public CrossSectionTypeEnum CrossSectionType { get; set; } = CrossSectionTypeEnum.Square;
+
+    public CAD_Dimension? Length { get; set; }
+
+    public CAD_Dimension? Width { get; set; }
+
+    public CAD_Dimension? Height { get; set; }
+
+    public CAD_Dimension? Thickness { get; set; }
+
+    public CAD_Parameter? MaxPressure { get; set; }
+}

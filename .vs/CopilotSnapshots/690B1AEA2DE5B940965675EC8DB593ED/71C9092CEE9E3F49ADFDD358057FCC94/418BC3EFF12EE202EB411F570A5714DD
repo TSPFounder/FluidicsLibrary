@@ -1,0 +1,15 @@
+﻿#nullable enable
+
+using Data;
+
+namespace Fluidics;
+
+public class Fluid
+{
+    public Fluid()
+    {
+        MyMaterial = new Material();
+    }
+
+    public Material MyMaterial { get; set; }
+}

@@ -1,0 +1,9 @@
+﻿#nullable enable
+
+using SystemsEngineering;
+
+namespace ThermalManagement;
+
+public class HeatExchanger : DWM_System
+{
+}
