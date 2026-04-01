@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CAD;
 
 namespace FluidicsLibrary
 {
@@ -15,6 +16,11 @@ namespace FluidicsLibrary
         //
         //  ************************************************************
         #region
+
+        private CAD_Parameter _MarkedBurstPressure = new CAD_Parameter();
+        private CAD_Dimension _NominalDiameter = new CAD_Dimension();
+        private double _markedBurstPressureValue;
+        private double _nominalDiameterValue;
 
         #endregion
         //  *****************************************************************************************
@@ -101,8 +107,8 @@ namespace FluidicsLibrary
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(burstPressure);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nominalDiameter);
 
-            MarkedBurstPressure = burstPressure;
-            NominalDiameter = nominalDiameter;
+            MarkedBurstPressureValue = burstPressure;
+            NominalDiameterValue = nominalDiameter;
         }
 
         /// <summary>
@@ -169,9 +175,29 @@ namespace FluidicsLibrary
         //
 
         /// <summary>
-        /// Nominal disk diameter in meters.
+        /// Nominal disk diameter as a CAD_Dimension.
         /// </summary>
-        public double NominalDiameter { get; set; }
+        public CAD_Dimension NominalDiameter
+        {
+            set => _NominalDiameter = value;
+            get
+            {
+                return _NominalDiameter;
+            }
+        }
+
+        /// <summary>
+        /// Nominal disk diameter as a numeric value in meters.
+        /// </summary>
+        public double NominalDiameterValue
+        {
+            get => _nominalDiameterValue;
+            set
+            {
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
+                _nominalDiameterValue = value;
+            }
+        }
 
         /// <summary>
         /// Minimum net flow area after burst in m².
@@ -182,7 +208,7 @@ namespace FluidicsLibrary
         /// <summary>
         /// Full bore cross-sectional area in m².
         /// </summary>
-        public double BoreArea => Math.PI * Math.Pow(NominalDiameter / 2.0, 2);
+        public double BoreArea => Math.PI * Math.Pow(_nominalDiameterValue / 2.0, 2);
 
         /// <summary>
         /// Ratio of net flow area to bore area. Typically 0.6–0.9.
@@ -196,10 +222,30 @@ namespace FluidicsLibrary
         //
 
         /// <summary>
-        /// Marked (stamped) burst pressure at the specified disk temperature in Pascals.
+        /// Marked (stamped) burst pressure as a CAD_Parameter.
+        /// </summary>
+        public CAD_Parameter MarkedBurstPressure
+        {
+            set => _MarkedBurstPressure = value;
+            get
+            {
+                return _MarkedBurstPressure;
+            }
+        }
+
+        /// <summary>
+        /// Marked (stamped) burst pressure as a numeric value in Pascals.
         /// This is the manufacturer's certified burst pressure.
         /// </summary>
-        public double MarkedBurstPressure { get; set; }
+        public double MarkedBurstPressureValue
+        {
+            get => _markedBurstPressureValue;
+            set
+            {
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
+                _markedBurstPressureValue = value;
+            }
+        }
 
         /// <summary>
         /// Manufacturing range as a ± fraction of the marked burst pressure (e.g., 0.05 = ±5%).
@@ -313,25 +359,25 @@ namespace FluidicsLibrary
         /// <summary>
         /// Maximum burst pressure (marked + manufacturing range) in Pascals.
         /// </summary>
-        public double MaxBurstPressure => MarkedBurstPressure * (1.0 + ManufacturingRange);
+        public double MaxBurstPressure => _markedBurstPressureValue * (1.0 + ManufacturingRange);
 
         /// <summary>
         /// Minimum burst pressure (marked − manufacturing range) in Pascals.
         /// </summary>
-        public double MinBurstPressure => MarkedBurstPressure * (1.0 - ManufacturingRange);
+        public double MinBurstPressure => _markedBurstPressureValue * (1.0 - ManufacturingRange);
 
         /// <summary>
         /// Derated burst pressure at the current operating temperature in Pascals.
         /// </summary>
         public double DeratedBurstPressure =>
-            MarkedBurstPressure * TemperatureDerateFactor * BackPressureDerateFactor;
+            _markedBurstPressureValue * TemperatureDerateFactor * BackPressureDerateFactor;
 
         /// <summary>
         /// Operating ratio (operating pressure / marked burst pressure).
         /// Should typically be ≤ 0.90 for long service life.
         /// </summary>
         public double OperatingRatio =>
-            MarkedBurstPressure > 0 ? OperatingPressure / MarkedBurstPressure : 0.0;
+            _markedBurstPressureValue > 0 ? OperatingPressure / _markedBurstPressureValue : 0.0;
 
         /// <summary>
         /// Whether the disk is intact and functional.
@@ -474,7 +520,7 @@ namespace FluidicsLibrary
         /// <param name="temperatureDerateFactor">Temperature derate factor at the target temperature.</param>
         public double CalculateBurstPressureAtTemperature(double temperatureDerateFactor)
         {
-            return MarkedBurstPressure * Math.Clamp(temperatureDerateFactor, 0.0, 1.5);
+            return _markedBurstPressureValue * Math.Clamp(temperatureDerateFactor, 0.0, 1.5);
         }
 
         /// <summary>
@@ -498,7 +544,7 @@ namespace FluidicsLibrary
                 return false;
 
             // Marked burst pressure should not exceed MAWP
-            return MarkedBurstPressure <= MAWP;
+            return _markedBurstPressureValue <= MAWP;
         }
 
         /// <summary>
@@ -636,7 +682,7 @@ namespace FluidicsLibrary
 
         public override string ToString() =>
             $"RuptureDisk [{Tag}, {DiskType}, {Material}, {Status}, " +
-            $"Ø={NominalDiameter * 1000:F1}mm, P_burst={MarkedBurstPressure / 1000:F1} kPa, " +
+            $"Ø={_nominalDiameterValue * 1000:F1}mm, P_burst={_markedBurstPressureValue / 1000:F1} kPa, " +
             $"OR={OperatingRatio * 100:F1}%]";
 
         #endregion
